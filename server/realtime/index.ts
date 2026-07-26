@@ -11,6 +11,8 @@ import { EmojiGuessEngine } from '../games/emoji';
 import { ChessEngine } from '../games/chess';
 import { RummyEngine } from '../games/rummy';
 import { LudoEngine } from '../games/ludo';
+import { TwentyOneEngine } from '../games/twentyone';
+import { TruthDareEngine } from '../games/truthdare';
 
 const ENGINES: Record<string, new (room: LobbyRoom, sessionId: string) => Engine> = {
   trivia: TriviaEngine,
@@ -19,6 +21,8 @@ const ENGINES: Record<string, new (room: LobbyRoom, sessionId: string) => Engine
   chess: ChessEngine,
   rummy: RummyEngine,
   ludo: LudoEngine,
+  '21q': TwentyOneEngine,
+  truthdare: TruthDareEngine,
 };
 
 type SocketCtx = {

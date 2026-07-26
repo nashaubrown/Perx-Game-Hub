@@ -15,6 +15,8 @@ const GAME_ICONS: Record<string, string> = {
   chess: '♟️',
   rummy: '🃏',
   ludo: '🎲',
+  '21q': '💞',
+  truthdare: '🔥',
 };
 
 export default function HostPage() {

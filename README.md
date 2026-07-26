@@ -82,6 +82,8 @@ prisma/schema.prisma   User, GuestSession, Venue, MerchantVenue, Game, Lobby, Lo
 | Chess | 2 | Full rules via chess.js (castling, en passant, promotion, all draw rules). No clock — cafe pace. Win 100, draw 50–50. |
 | Gin Rummy | 2 | One hand, no layoffs. Exact best-meld deadwood computed server-side. Gin = deadwood + 25, undercut +25 to the defender. |
 | Ludo | 2–4 | Standard rules: 6 to leave the yard and roll again, captures on non-safe squares grant a re-roll, exact roll home, three 6s lose the turn. |
+| 21 Questions | 2 | Date night. 21 curated questions in rising tiers (warm-up → deep), answered out loud, 2 passes each. Co-op — no winner, both earn the points. |
+| Truth or Dare | 2–8 | Cafe-appropriate decks (all dares work at a table). Complete = +10, chicken = 0, most points wins. |
 | Memory Match | 1 | Fewer flips + faster = better score. |
 | 2048 | 1 | Classic, swipe-first. |
 | Daily Word | 1 | One 5-letter word/day (Maldives time), 6 guesses, streak-tracked with streak bonuses. |

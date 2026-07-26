@@ -12,6 +12,8 @@ import { EmojiView } from '@/components/game/EmojiView';
 import { ChessView } from '@/components/game/ChessView';
 import { RummyView } from '@/components/game/RummyView';
 import { LudoView } from '@/components/game/LudoView';
+import { TwentyOneView } from '@/components/game/TwentyOneView';
+import { TruthDareView } from '@/components/game/TruthDareView';
 import { FinalView, type FinalPayload } from '@/components/game/FinalView';
 
 const GAME_VIEWS: Record<string, React.ComponentType<{ lobby: any }>> = {
@@ -21,6 +23,8 @@ const GAME_VIEWS: Record<string, React.ComponentType<{ lobby: any }>> = {
   chess: ChessView,
   rummy: RummyView,
   ludo: LudoView,
+  '21q': TwentyOneView,
+  truthdare: TruthDareView,
 };
 
 export default function LobbyPage() {

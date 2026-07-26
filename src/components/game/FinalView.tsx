@@ -11,6 +11,7 @@ export type FinalPayload = {
   breakdown?: Record<string, { word: string; points: number; unique: boolean }[]>;
   reason?: string;
   draw?: boolean;
+  title?: string;
 };
 
 const MEDALS = ['🥇', '🥈', '🥉'];
@@ -33,11 +34,13 @@ export function FinalView({
       <div className="text-center">
         <p className="text-5xl">{payload.draw ? '🤝' : me?.won ? '🏆' : '🎉'}</p>
         <h2 className="mt-2 font-display text-2xl font-black">
-          {payload.draw
-            ? "It's a draw"
-            : me?.won
-              ? 'You won!'
-              : `${payload.standings.find((s) => s.won)?.nickname ?? payload.standings[0]?.nickname} wins`}
+          {payload.title
+            ? payload.title
+            : payload.draw
+              ? "It's a draw"
+              : me?.won
+                ? 'You won!'
+                : `${payload.standings.find((s) => s.won)?.nickname ?? payload.standings[0]?.nickname} wins`}
         </h2>
         {payload.reason && <p className="mt-1 text-sm text-ink-400">{payload.reason}</p>}
         {me && (

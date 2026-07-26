@@ -14,6 +14,8 @@ async function main() {
     { id: 'chess', name: 'Chess', tagline: 'The classic. No clock — cafe pace.', multi: true, minPlayers: 2, maxPlayers: 2 },
     { id: 'rummy', name: 'Gin Rummy', tagline: 'Draw, meld, knock under 10 deadwood.', multi: true, minPlayers: 2, maxPlayers: 2 },
     { id: 'ludo', name: 'Ludo', tagline: 'Roll a 6, race your four home, capture on the way.', multi: true, minPlayers: 2, maxPlayers: 4 },
+    { id: '21q', name: '21 Questions', tagline: 'Date night. 21 questions, light to deep — answer out loud.', multi: true, minPlayers: 2, maxPlayers: 2 },
+    { id: 'truthdare', name: 'Truth or Dare', tagline: 'Cafe-friendly truths and table dares. Chicken at your peril.', multi: true, minPlayers: 2, maxPlayers: 8 },
     { id: 'memory', name: 'Memory Match', tagline: 'Find all the pairs in as few flips as you can.', multi: false, minPlayers: 1, maxPlayers: 1 },
     { id: '2048', name: '2048', tagline: 'Swipe tiles, merge numbers, reach 2048.', multi: false, minPlayers: 1, maxPlayers: 1 },
     { id: 'daily', name: 'Daily Word', tagline: 'One word a day. Keep your streak alive.', multi: false, minPlayers: 1, maxPlayers: 1 },
