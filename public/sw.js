@@ -1,7 +1,7 @@
 // Minimal service worker: precache the shell + brand assets, network-first
 // for pages, cache-first for static assets. Enough for installability and
 // snappier loads on cafe Wi-Fi; realtime traffic never touches the SW.
-const CACHE = 'perx-play-v1';
+const CACHE = 'perx-play-v2';
 const PRECACHE = ['/', '/manifest.webmanifest', '/brand/wordmark-white.svg', '/brand/favicon.svg'];
 
 self.addEventListener('install', (e) => {
