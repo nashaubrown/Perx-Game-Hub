@@ -17,6 +17,7 @@ async function main() {
     { id: 'memory', name: 'Memory Match', tagline: 'Find all the pairs in as few flips as you can.', multi: false, minPlayers: 1, maxPlayers: 1 },
     { id: '2048', name: '2048', tagline: 'Swipe tiles, merge numbers, reach 2048.', multi: false, minPlayers: 1, maxPlayers: 1 },
     { id: 'daily', name: 'Daily Word', tagline: 'One word a day. Keep your streak alive.', multi: false, minPlayers: 1, maxPlayers: 1 },
+    { id: 'pacman', name: 'Pac-Man', tagline: 'Clear the maze, dodge the ghosts.', multi: false, minPlayers: 1, maxPlayers: 1 },
   ];
   for (const g of games) {
     await db.game.upsert({ where: { id: g.id }, create: g, update: g });

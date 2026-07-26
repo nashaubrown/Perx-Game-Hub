@@ -7,6 +7,8 @@ import { useMe } from '@/hooks/useMe';
 
 type Game = { id: string; name: string; tagline: string; multi: boolean };
 
+const SOLO_ICONS: Record<string, string> = { memory: '🃏', '2048': '🔢', daily: '📅', pacman: '🟡' };
+
 export default function HomePage() {
   const me = useMe();
   const [games, setGames] = useState<Game[]>([]);
@@ -58,13 +60,14 @@ export default function HomePage() {
 
       <section>
         <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink-500">Playing solo?</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {(solo.length
             ? solo
             : [
                 { id: 'memory', name: 'Memory Match', tagline: '' },
                 { id: '2048', name: '2048', tagline: '' },
                 { id: 'daily', name: 'Daily Word', tagline: '' },
+                { id: 'pacman', name: 'Pac-Man', tagline: '' },
               ]
           ).map((g) => (
             <Link
@@ -72,7 +75,7 @@ export default function HomePage() {
               href={`/solo/${g.id}`}
               className="card flex flex-col items-center gap-2 p-4 text-center active:bg-white/10"
             >
-              <span className="text-2xl">{g.id === 'memory' ? '🃏' : g.id === '2048' ? '🔢' : '📅'}</span>
+              <span className="text-2xl">{SOLO_ICONS[g.id] ?? '🎮'}</span>
               <span className="text-xs font-bold">{g.name}</span>
             </Link>
           ))}

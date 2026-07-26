@@ -11,6 +11,7 @@ import { award, earnedToday, POINTS } from '@/lib/points';
 const BOUNDS: Record<string, { maxScore: number }> = {
   memory: { maxScore: 10000 },
   '2048': { maxScore: 250000 },
+  pacman: { maxScore: 500000 },
 };
 
 export async function POST(req: NextRequest) {
