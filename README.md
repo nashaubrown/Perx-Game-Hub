@@ -85,6 +85,7 @@ prisma/schema.prisma   User, GuestSession, Venue, MerchantVenue, Game, Lobby, Lo
 | Memory Match | 1 | Fewer flips + faster = better score. |
 | 2048 | 1 | Classic, swipe-first. |
 | Daily Word | 1 | One 5-letter word/day (Maldives time), 6 guesses, streak-tracked with streak bonuses. |
+| Pac-Man | 1 | Canvas arcade classic — 4 ghost AIs, power pellets, levels. Swipe to steer. |
 
 Turn-based games (chess, rummy, ludo) never stall on a locked phone: a **connected** player can think as long as they like, but a player who stays disconnected on their turn is forfeited (chess/rummy, 2 min) or auto-played (ludo, 90s). Cards in rummy live only on the server — each client sees just their own hand.
 
