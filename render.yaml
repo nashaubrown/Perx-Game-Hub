@@ -1,0 +1,31 @@
+# Render Blueprint — deploys the whole app (Next.js + Socket.IO + jobs) as one
+# service with a managed Postgres. In Render: New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: perx-play
+    runtime: node
+    plan: starter # free tier works too, but sleeps after 15 min idle (slow first load)
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm run db:seed && npm start
+    healthCheckPath: /api/games
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: perx-play-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MYPERX_SHARED_SECRET
+        generateValue: true
+      - key: MYPERX_TOKEN_SECRET
+        generateValue: true
+      - key: APP_URL
+        sync: false # set to the public URL Render assigns (e.g. https://perx-play.onrender.com)
+
+databases:
+  - name: perx-play-db
+    plan: basic-256mb
+    databaseName: perx_play
+    user: perx
