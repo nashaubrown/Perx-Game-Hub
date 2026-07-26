@@ -44,6 +44,24 @@ export abstract class Engine {
     return t;
   }
 
+  /**
+   * Turn guard for turn-based games (chess, rummy, ludo). A player who is
+   * connected can think as long as they like — but if the player on turn is
+   * DISCONNECTED for `ms`, onAbandon fires (forfeit or skip) so one locked
+   * phone can't stall the whole table. Call on every turn change.
+   */
+  private turnToken = 0;
+  protected armTurnGuard(playerKey: string, onAbandon: () => void, ms = 120000) {
+    const token = ++this.turnToken;
+    const check = () => {
+      if (this.finished || token !== this.turnToken) return;
+      const player = this.room.players.get(playerKey);
+      if (player && !player.connected) onAbandon();
+      else this.after(ms, check); // still their turn, still connected — keep waiting
+    };
+    this.after(ms, check);
+  }
+
   protected addScore(playerKey: string, delta: number) {
     this.scores.set(playerKey, (this.scores.get(playerKey) ?? 0) + delta);
   }
@@ -61,14 +79,15 @@ export abstract class Engine {
 
     const board = this.scoreboard();
     const topScore = board[0]?.score ?? 0;
+    const isDraw = extra?.draw === true;
     const standings: FinalStanding[] = board.map((entry, i) => {
       const player = this.room.players.get(entry.key) as RoomPlayer;
       return {
         key: entry.key,
         nickname: entry.nickname,
         score: entry.score,
-        rank: i + 1,
-        won: entry.score === topScore && topScore > 0,
+        rank: isDraw ? 1 : i + 1,
+        won: !isDraw && entry.score === topScore && topScore > 0,
         isGuest: !player?.userId,
       };
     });

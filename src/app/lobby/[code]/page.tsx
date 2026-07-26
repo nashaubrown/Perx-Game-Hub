@@ -9,7 +9,19 @@ import { WaitingRoom } from '@/components/game/WaitingRoom';
 import { TriviaView } from '@/components/game/TriviaView';
 import { WordRushView } from '@/components/game/WordRushView';
 import { EmojiView } from '@/components/game/EmojiView';
+import { ChessView } from '@/components/game/ChessView';
+import { RummyView } from '@/components/game/RummyView';
+import { LudoView } from '@/components/game/LudoView';
 import { FinalView, type FinalPayload } from '@/components/game/FinalView';
+
+const GAME_VIEWS: Record<string, React.ComponentType<{ lobby: any }>> = {
+  trivia: TriviaView,
+  wordrush: WordRushView,
+  emoji: EmojiView,
+  chess: ChessView,
+  rummy: RummyView,
+  ludo: LudoView,
+};
 
 export default function LobbyPage() {
   const { code } = useParams<{ code: string }>();
@@ -63,13 +75,10 @@ export default function LobbyPage() {
       {final ? (
         <FinalView payload={final} lobby={lobby} isGuest={me === null} />
       ) : inGame ? (
-        lobby.state.gameId === 'trivia' ? (
-          <TriviaView lobby={lobby} />
-        ) : lobby.state.gameId === 'wordrush' ? (
-          <WordRushView lobby={lobby} />
-        ) : (
-          <EmojiView lobby={lobby} />
-        )
+        (() => {
+          const View = GAME_VIEWS[lobby.state.gameId] ?? TriviaView;
+          return <View lobby={lobby} />;
+        })()
       ) : (
         <WaitingRoom lobby={lobby} />
       )}

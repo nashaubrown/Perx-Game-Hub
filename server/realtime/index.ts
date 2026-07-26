@@ -8,11 +8,17 @@ import { Engine } from '../games/engine';
 import { TriviaEngine } from '../games/trivia';
 import { WordRushEngine } from '../games/wordrush';
 import { EmojiGuessEngine } from '../games/emoji';
+import { ChessEngine } from '../games/chess';
+import { RummyEngine } from '../games/rummy';
+import { LudoEngine } from '../games/ludo';
 
 const ENGINES: Record<string, new (room: LobbyRoom, sessionId: string) => Engine> = {
   trivia: TriviaEngine,
   wordrush: WordRushEngine,
   emoji: EmojiGuessEngine,
+  chess: ChessEngine,
+  rummy: RummyEngine,
+  ludo: LudoEngine,
 };
 
 type SocketCtx = {
@@ -73,7 +79,8 @@ export function attachRealtime(io: Server) {
         if (!existing) {
           if (room.status === 'IN_GAME')
             return cb?.({ error: 'That table is mid-game. Ask them to wait for the next round!' });
-          if (room.players.size >= 8) return cb?.({ error: 'Lobby is full (8 players max).' });
+          if (room.players.size >= room.maxPlayers)
+            return cb?.({ error: `Lobby is full (${room.maxPlayers} players max for this game).` });
 
           // make the nickname unique within the lobby
           const names = new Set([...room.players.values()].map((p) => p.nickname.toLowerCase()));

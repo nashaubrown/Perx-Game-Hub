@@ -8,7 +8,14 @@ import { useMe } from '@/hooks/useMe';
 type Game = { id: string; name: string; tagline: string; multi: boolean; minPlayers: number; maxPlayers: number };
 type Venue = { id: string; name: string; location: string | null };
 
-const GAME_ICONS: Record<string, string> = { trivia: '🧠', wordrush: '🔤', emoji: '😜' };
+const GAME_ICONS: Record<string, string> = {
+  trivia: '🧠',
+  wordrush: '🔤',
+  emoji: '😜',
+  chess: '♟️',
+  rummy: '🃏',
+  ludo: '🎲',
+};
 
 export default function HostPage() {
   const router = useRouter();

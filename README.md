@@ -47,8 +47,9 @@ server/index.ts        one entry, two modes:
 │                        default: Next.js + Socket.IO on one port (single VPS)
 │                        SOCKET_STANDALONE=1: Socket.IO only (Vercel frontend + small socket host)
 ├─ server/realtime/    lobby registry, join/rejoin, socket auth from the same httpOnly JWT cookie
-└─ server/games/       server-authoritative engines: trivia, wordrush, emoji
-                       (clients send intents; ALL scoring happens here)
+└─ server/games/       server-authoritative engines: trivia, wordrush, emoji,
+                       chess (chess.js referee), gin rummy, ludo
+                       (clients send intents; ALL scoring + rules happen here)
 
 src/app/               Next.js App Router pages + API routes
 ├─ api/auth,guest      own auth: bcrypt + JWT in httpOnly cookies; guest sessions by nickname
@@ -78,9 +79,14 @@ prisma/schema.prisma   User, GuestSession, Venue, MerchantVenue, Game, Lobby, Lo
 | Trivia Battle | 2–8 | 10 questions, 15s. Correct = 100 + speed bonus up to 100. Early reveal when everyone answers. |
 | Word Rush | 2–8 | Shared 5×5 grid, 90s, Boggle adjacency + dictionary. Words nobody else found score ×2. |
 | Emoji Guess | 3–8 | Presenter picks a phrase + emojis; first correct guess 150, later 75, presenter 25 per guesser. |
+| Chess | 2 | Full rules via chess.js (castling, en passant, promotion, all draw rules). No clock — cafe pace. Win 100, draw 50–50. |
+| Gin Rummy | 2 | One hand, no layoffs. Exact best-meld deadwood computed server-side. Gin = deadwood + 25, undercut +25 to the defender. |
+| Ludo | 2–4 | Standard rules: 6 to leave the yard and roll again, captures on non-safe squares grant a re-roll, exact roll home, three 6s lose the turn. |
 | Memory Match | 1 | Fewer flips + faster = better score. |
 | 2048 | 1 | Classic, swipe-first. |
 | Daily Word | 1 | One 5-letter word/day (Maldives time), 6 guesses, streak-tracked with streak bonuses. |
+
+Turn-based games (chess, rummy, ludo) never stall on a locked phone: a **connected** player can think as long as they like, but a player who stays disconnected on their turn is forfeited (chess/rummy, 2 min) or auto-played (ludo, 90s). Cards in rummy live only on the server — each client sees just their own hand.
 
 Points: +10 per multiplayer game, +50 for the win, +30 (+streak bonus) for the daily word, reading = 5 pts per 5 minutes capped at 60/day, solo games capped at 50/day.
 

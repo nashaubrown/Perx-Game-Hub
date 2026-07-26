@@ -26,6 +26,7 @@ export class LobbyRoom {
   code: string;
   lobbyId: string;
   gameId: string;
+  maxPlayers = 8;
   hostUserId: string;
   venueId: string | null;
   status: 'OPEN' | 'IN_GAME' | 'FINISHED' | 'CLOSED' = 'OPEN';
@@ -88,10 +89,14 @@ export async function getRoom(io: Server, code: string): Promise<LobbyRoom | nul
   const existing = rooms.get(code);
   if (existing) return existing;
 
-  const lobby = await db.lobby.findUnique({ where: { code }, include: { players: true } });
+  const lobby = await db.lobby.findUnique({
+    where: { code },
+    include: { players: true, game: { select: { maxPlayers: true } } },
+  });
   if (!lobby || lobby.status === 'CLOSED') return null;
 
   const room = new LobbyRoom(io, lobby);
+  room.maxPlayers = lobby.game.maxPlayers;
   // Rehydrate roster after a server restart — everyone shows disconnected
   // until they rejoin with the same code.
   for (const p of lobby.players) {
