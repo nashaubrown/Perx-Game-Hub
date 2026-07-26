@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env
+storage/books/*
+storage/uploads/*
+!storage/books/.gitkeep
+!storage/uploads/.gitkeep
+*.tsbuildinfo
+next-env.d.ts

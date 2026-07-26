@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLAYER
+  MERCHANT
+  ADMIN
+}
+
+enum LobbyStatus {
+  OPEN
+  IN_GAME
+  FINISHED
+  CLOSED
+}
+
+enum BookFormat {
+  EPUB
+  PDF
+}
+
+enum RedemptionStatus {
+  PENDING
+  VALIDATED
+  EXPIRED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  phone        String?  @unique
+  handle       String   @unique // 3-20 chars, lowercase alphanumeric + underscore
+  passwordHash String
+  role         Role     @default(PLAYER)
+  createdAt    DateTime @default(now())
+
+  // daily word puzzle streak
+  dailyStreak   Int       @default(0)
+  lastDailyDate DateTime?
+
+  lobbiesHosted   Lobby[]              @relation("host")
+  lobbyPlayers    LobbyPlayer[]
+  results         GameResult[]
+  points          PointsLedger[]
+  readingProgress ReadingProgress[]
+  readingDays     ReadingDay[]
+  bookmarks       Bookmark[]
+  dailyResults    DailyPuzzleResult[]
+  redemptions     Redemption[]
+  merchantVenues  MerchantVenue[]
+  resetTokens     PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  token     String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+}
+
+// Guests join lobbies with just a nickname. If they sign up at the end of a
+// game, convertedUserId links the guest's history to the new account.
+model GuestSession {
+  id              String   @id @default(cuid())
+  nickname        String
+  createdAt       DateTime @default(now())
+  convertedUserId String?
+
+  lobbyPlayers LobbyPlayer[]
+  results      GameResult[]
+  points       PointsLedger[]
+}
+
+model Venue {
+  id             String  @id @default(cuid())
+  name           String
+  slug           String  @unique
+  location       String?
+  logoUrl        String?
+  analyticsToken String  @unique // bearer token for /api/v1/venues/:id/analytics
+
+  lobbies       Lobby[]
+  sessions      GameSession[]
+  rewards       Reward[]
+  merchants     MerchantVenue[]
+  webhookConfig WebhookConfig?
+  points        PointsLedger[]
+}
+
+model MerchantVenue {
+  userId  String
+  venueId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue   Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@id([userId, venueId])
+}
+
+// Static game registry, seeded. e.g. trivia, wordrush, emoji, memory, 2048, daily
+model Game {
+  id         String  @id // slug
+  name       String
+  tagline    String
+  multi      Boolean
+  minPlayers Int     @default(1)
+  maxPlayers Int     @default(1)
+
+  lobbies  Lobby[]
+  sessions GameSession[]
+}
+
+model Lobby {
+  id         String      @id @default(cuid())
+  code       String      @unique // 6-char join code, unambiguous charset
+  gameId     String
+  game       Game        @relation(fields: [gameId], references: [id])
+  hostUserId String
+  host       User        @relation("host", fields: [hostUserId], references: [id])
+  venueId    String?
+  venue      Venue?      @relation(fields: [venueId], references: [id])
+  status     LobbyStatus @default(OPEN)
+  createdAt  DateTime    @default(now())
+
+  players  LobbyPlayer[]
+  sessions GameSession[]
+}
+
+model LobbyPlayer {
+  id       String        @id @default(cuid())
+  lobbyId  String
+  lobby    Lobby         @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  userId   String?
+  user     User?         @relation(fields: [userId], references: [id])
+  guestId  String?
+  guest    GuestSession? @relation(fields: [guestId], references: [id])
+  nickname String
+  joinedAt DateTime      @default(now())
+
+  results GameResult[]
+
+  @@unique([lobbyId, nickname])
+}
+
+model GameSession {
+  id        String    @id @default(cuid())
+  gameId    String
+  game      Game      @relation(fields: [gameId], references: [id])
+  lobbyId   String?
+  lobby     Lobby?    @relation(fields: [lobbyId], references: [id])
+  venueId   String?
+  venue     Venue?    @relation(fields: [venueId], references: [id])
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  results GameResult[]
+}
+
+model GameResult {
+  id            String       @id @default(cuid())
+  sessionId     String
+  session       GameSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  lobbyPlayerId String?
+  lobbyPlayer   LobbyPlayer? @relation(fields: [lobbyPlayerId], references: [id])
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id])
+  guestId       String?
+  guest         GuestSession? @relation(fields: [guestId], references: [id])
+  score         Int
+  rank          Int
+  won           Boolean      @default(false)
+}
+
+model Book {
+  id          String     @id @default(cuid())
+  title       String
+  author      String
+  genre       String
+  format      BookFormat @default(EPUB)
+  coverUrl    String?
+  sourceUrl   String? // remote EPUB (Project Gutenberg), fetched and cached on demand
+  filePath    String? // local file under storage/ once fetched or uploaded
+  gutenbergId Int?       @unique
+  curated     Boolean    @default(false) // curated/local flag for Maldivian authors & cafe picks
+  createdAt   DateTime   @default(now())
+
+  progress  ReadingProgress[]
+  bookmarks Bookmark[]
+}
+
+model ReadingProgress {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookId     String
+  book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  location   String? // epub CFI or page number
+  percent    Float    @default(0)
+  finished   Boolean  @default(false)
+  lastReadAt DateTime @default(now())
+
+  @@id([userId, bookId])
+}
+
+// One row per user per day — server-side reading minutes with daily caps.
+model ReadingDay {
+  userId        String
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          String // YYYY-MM-DD
+  minutes       Int    @default(0)
+  pointsAwarded Int    @default(0)
+
+  @@id([userId, date])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookId    String
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  location  String
+  label     String
+  createdAt DateTime @default(now())
+}
+
+// Append-only. Balance = SUM(amount). Never mutate or delete rows.
+model PointsLedger {
+  id        String        @id @default(cuid())
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id])
+  guestId   String?
+  guest     GuestSession? @relation(fields: [guestId], references: [id])
+  amount    Int // negative for redemptions
+  reason    String // game_played | game_won | daily_streak | reading | redemption | signup_bonus
+  refType   String? // session | book | redemption | puzzle
+  refId     String?
+  venueId   String?
+  venue     Venue?        @relation(fields: [venueId], references: [id])
+  createdAt DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@index([venueId, createdAt])
+}
+
+model DailyPuzzleResult {
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        String // YYYY-MM-DD
+  guesses     Json // array of guessed words
+  won         Boolean @default(false)
+  finished    Boolean @default(false)
+  streakAfter Int     @default(0)
+
+  @@id([userId, date])
+}
+
+model Reward {
+  id          String  @id @default(cuid())
+  venueId     String
+  venue       Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  costPoints  Int
+  active      Boolean @default(true)
+
+  redemptions Redemption[]
+}
+
+model Redemption {
+  id          String           @id @default(cuid())
+  rewardId    String
+  reward      Reward           @relation(fields: [rewardId], references: [id])
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  code        String // short-lived 6-digit code staff validates
+  status      RedemptionStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  expiresAt   DateTime
+  validatedAt DateTime?
+
+  @@index([code, status])
+}
+
+model WebhookConfig {
+  id      String  @id @default(cuid())
+  venueId String  @unique
+  venue   Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  url     String
+  secret  String
+  enabled Boolean @default(true)
+}

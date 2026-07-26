@@ -1,0 +1,77 @@
+@import '../../design/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Satoshi via Fontshare (official distribution), Inter fallback */
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap');
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--canvas-brand);
+  color: #ffffff;
+  font-family: var(--font-body);
+  min-height: 100dvh;
+}
+
+/* the brand aurora — soft, slow-drifting glows on the dark canvas */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 60% at 12% 6%, rgba(52, 199, 89, 0.28), transparent 60%),
+    radial-gradient(55% 55% at 8% 78%, rgba(46, 111, 208, 0.28), transparent 60%),
+    radial-gradient(55% 55% at 92% 70%, rgba(138, 69, 212, 0.18), transparent 60%),
+    #0a0a0a;
+  animation: aurora-drift 24s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-2%, 1.5%, 0) scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora { animation: none; }
+}
+
+/* gradient numbers — stats only, never body text (see gradient.md) */
+.grad-number {
+  background: linear-gradient(135deg, #ff5b35, #f0398f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.grad-number-electric {
+  background: linear-gradient(135deg, #5ba6fe, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card {
+  @apply rounded-lg border border-white/10 bg-white/[0.04] backdrop-blur-sm;
+}
+
+.btn-primary {
+  @apply flex h-12 w-full items-center justify-center rounded-md bg-perx font-bold text-ink-950 transition-colors duration-[160ms] active:bg-perx-dark disabled:opacity-40;
+}
+
+.btn-ghost {
+  @apply flex h-12 w-full items-center justify-center rounded-md border border-white/15 font-bold text-white transition-colors duration-[160ms] active:bg-white/10 disabled:opacity-40;
+}
+
+.input {
+  @apply h-12 w-full rounded-md border border-white/15 bg-white/[0.06] px-4 text-white placeholder:text-ink-400 focus:border-perx focus:outline-none;
+}
+
+/* one-handed reachability: keep primary actions in the bottom half */
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 76px);
+}

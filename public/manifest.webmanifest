@@ -1,0 +1,13 @@
+{
+  "name": "Perx Play",
+  "short_name": "Perx Play",
+  "description": "Play together at the table, read while you wait, earn Perx points.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "icons": [
+    { "src": "/brand/png/favicon.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "/brand/png/icon-green.png", "sizes": "400x400", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
