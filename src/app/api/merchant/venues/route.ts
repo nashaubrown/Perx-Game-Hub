@@ -23,6 +23,15 @@ export async function GET() {
       location: v.location,
       analyticsToken: v.analyticsToken,
       webhook: v.webhookConfig ?? null,
+      playConfig: {
+        playEarnEnabled: v.playEarnEnabled,
+        earnRatePer10: v.earnRatePer10,
+        dailyCardCap: v.dailyCardCap,
+        multiplier: v.multiplier,
+        openHour: v.openHour,
+        closeHour: v.closeHour,
+        publicIp: v.publicIp,
+      },
     })),
   });
 }

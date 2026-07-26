@@ -95,6 +95,9 @@ export function attachRealtime(io: Server) {
           const lobbyPlayer = await db.lobbyPlayer.create({
             data: { lobbyId: room.lobbyId, userId, guestId, nickname: finalName },
           });
+          const clientIp =
+            String(socket.handshake.headers['x-forwarded-for'] ?? '').split(',')[0].trim() ||
+            socket.handshake.address;
           room.players.set(key, {
             key,
             userId,
@@ -103,6 +106,7 @@ export function attachRealtime(io: Server) {
             lobbyPlayerId: lobbyPlayer.id,
             connected: true,
             sockets: new Set([socket.id]),
+            presentByIp: !!room.venuePublicIp && clientIp === room.venuePublicIp,
           });
           emitVenueEvent(room.venueId, 'player_joined', {
             lobbyCode: room.code,

@@ -39,6 +39,32 @@ async function main() {
 
   attachRealtime(io);
 
+  // Background jobs: MyPerx earn-event lifecycle + news feed refresh.
+  // Runs wherever the socket layer runs (one process in either deploy mode).
+  if (!process.env.DISABLE_JOBS) {
+    const { expireStalePending, dispatchConfirmed } = await import('../src/lib/integration');
+    const { refreshFeeds } = await import('../src/lib/news');
+    setInterval(async () => {
+      try {
+        await expireStalePending();
+        await dispatchConfirmed();
+      } catch (err) {
+        console.error('[jobs:integration]', err);
+      }
+    }, 60000);
+    const news = async () => {
+      try {
+        const results = await refreshFeeds();
+        const ok = results.filter((r) => !r.error);
+        if (ok.length) console.log('[jobs:news]', ok.map((r) => `${r.provider}+${r.added}`).join(' '));
+      } catch (err) {
+        console.error('[jobs:news]', err);
+      }
+    };
+    setTimeout(news, 5000);
+    setInterval(news, 60 * 60 * 1000);
+  }
+
   httpServer.listen(port, () => {
     console.log(
       `[perx-play] ${standalone ? 'socket server' : 'app + socket'} listening on http://localhost:${port}`

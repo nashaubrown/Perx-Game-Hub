@@ -49,8 +49,11 @@ async function main() {
       slug: 'meraki-coffee',
       location: 'Malé, Maldives',
       analyticsToken: crypto.randomBytes(24).toString('hex'),
+      externalMerchantId: 'myperx-merchant-meraki',
+      openHour: 8,
+      closeHour: 23,
     },
-    update: {},
+    update: { externalMerchantId: 'myperx-merchant-meraki', openHour: 8, closeHour: 23 },
   });
   const seahouse = await db.venue.upsert({
     where: { slug: 'sea-house' },
@@ -59,8 +62,11 @@ async function main() {
       slug: 'sea-house',
       location: 'Hulhumalé, Maldives',
       analyticsToken: crypto.randomBytes(24).toString('hex'),
+      externalMerchantId: 'myperx-merchant-seahouse',
+      openHour: 7,
+      closeHour: 23,
     },
-    update: {},
+    update: { externalMerchantId: 'myperx-merchant-seahouse', openHour: 7, closeHour: 23 },
   });
   await db.merchantVenue.upsert({
     where: { userId_venueId: { userId: merchant.id, venueId: meraki.id } },
@@ -98,6 +104,31 @@ async function main() {
         sourceUrl: `https://www.gutenberg.org/cache/epub/${b.gutenbergId}/pg${b.gutenbergId}-images.epub`,
         coverUrl: `https://www.gutenberg.org/cache/epub/${b.gutenbergId}/pg${b.gutenbergId}.cover.medium.jpg`,
       },
+      update: {},
+    });
+  }
+
+  // ---- news providers (feeds refresh hourly; sample items so the tab demos offline) ----
+  const newsProviders = [
+    { name: 'Mihaaru', slug: 'mihaaru', feedUrl: 'https://mihaaru.com/rss', language: 'dv', featured: true },
+    { name: 'Sun Online', slug: 'sun-online', feedUrl: 'https://sun.mv/rss', language: 'en', featured: false },
+    { name: 'Adhadhu', slug: 'adhadhu', feedUrl: 'https://adhadhu.com/rss', language: 'dv', featured: false },
+    { name: 'Raajje.mv', slug: 'raajje', feedUrl: 'https://raajje.mv/rss', language: 'en', featured: false },
+  ];
+  for (const p of newsProviders) {
+    await db.newsProvider.upsert({ where: { slug: p.slug }, create: p, update: {} });
+  }
+  const mihaaru = await db.newsProvider.findUnique({ where: { slug: 'mihaaru' } });
+  const sun = await db.newsProvider.findUnique({ where: { slug: 'sun-online' } });
+  const sampleNews = [
+    { providerId: sun!.id, title: 'Malé cafe scene keeps growing: 12 new openings this quarter', url: 'https://example.mv/demo/cafe-scene', summary: 'Demo headline seeded for offline preview — real headlines arrive when feeds refresh.', publishedAt: new Date(Date.now() - 2 * 3600e3) },
+    { providerId: sun!.id, title: 'National team announces squad for regional championship', url: 'https://example.mv/demo/squad', summary: 'Demo headline seeded for offline preview.', publishedAt: new Date(Date.now() - 5 * 3600e3) },
+    { providerId: mihaaru!.id, title: 'ހުޅުމާލޭގައި އާ ފެރީ ޚިދުމަތެއް ފަށައިފި', url: 'https://example.mv/demo/ferry', summary: 'Demo Dhivehi headline (renders right-to-left).', publishedAt: new Date(Date.now() - 3600e3) },
+  ];
+  for (const n of sampleNews) {
+    await db.newsItem.upsert({
+      where: { providerId_url: { providerId: n.providerId, url: n.url } },
+      create: n,
       update: {},
     });
   }

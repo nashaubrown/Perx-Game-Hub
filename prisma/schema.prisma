@@ -39,6 +39,7 @@ model User {
   handle       String   @unique // 3-20 chars, lowercase alphanumeric + underscore
   passwordHash String
   role         Role     @default(PLAYER)
+  perxUserId   String?  @unique // linked MyPerx account (set via /api/auth/myperx)
   createdAt    DateTime @default(now())
 
   // daily word puzzle streak
@@ -86,12 +87,87 @@ model Venue {
   logoUrl        String?
   analyticsToken String  @unique // bearer token for /api/v1/venues/:id/analytics
 
+  // ---- MyPerx integration: merchant-card earning from games ----
+  externalMerchantId String? @unique // MyPerx merchant id this venue maps to
+  playEarnEnabled    Boolean @default(true)
+  earnRatePer10      Int     @default(1) // merchant-card points per 10 play points
+  dailyCardCap       Int     @default(30) // max card points per customer per day at this venue
+  multiplier         Float   @default(1) // merchant-funded boost (e.g. 2x Tuesday nights)
+  openHour           Int? // venue-local hour 0-23; earning outside opening hours is rejected
+  closeHour          Int?
+  publicIp           String? // venue Wi-Fi public IP — presence signal fast-tracks confirmation
+
   lobbies       Lobby[]
   sessions      GameSession[]
   rewards       Reward[]
   merchants     MerchantVenue[]
   webhookConfig WebhookConfig?
   points        PointsLedger[]
+  earnEvents    PlayEarnEvent[]
+}
+
+enum EarnEventStatus {
+  PENDING // waiting for a same-day transaction at the venue to confirm presence
+  CONFIRMED // confirmed (transaction matched or presence signal) — queued for MyPerx
+  SENT // delivered to the MyPerx wallet API
+  EXPIRED // no transaction by end of day — never credited
+  FAILED // delivery kept failing; kept for reconciliation
+}
+
+// Outbox for merchant-card points earned by playing at a venue. Card points
+// only ever credit after confirmation (anti-farming: photographing a table QR
+// and playing from home earns nothing without a purchase that day).
+model PlayEarnEvent {
+  id           String          @id @default(cuid())
+  ledgerRowId  String          @unique // Play ledger row — the idempotency key end-to-end
+  userId       String
+  perxUserId   String? // present once the user has linked MyPerx
+  venueId      String
+  venue        Venue           @relation(fields: [venueId], references: [id])
+  merchantId   String? // external MyPerx merchant id (denormalized from venue)
+  playPoints   Int
+  cardPoints   Int
+  day          String // YYYY-MM-DD in venue-local time (caps + expiry window)
+  status       EarnEventStatus @default(PENDING)
+  presence     String? // what confirmed it: transaction | venue_ip | manual
+  attempts     Int             @default(0)
+  lastError    String?
+  createdAt    DateTime        @default(now())
+  confirmedAt  DateTime?
+  sentAt       DateTime?
+
+  @@index([userId, venueId, day])
+  @@index([status])
+}
+
+// ---- Daily News: featured slots are the sellable unit for news providers ----
+model NewsProvider {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?
+  feedUrl   String? // RSS/Atom feed to pull from
+  language  String   @default("en") // en | dv (Dhivehi/Thaana is RTL)
+  featured  Boolean  @default(false) // paid placement: pinned to the top with a Featured chip
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  items NewsItem[]
+}
+
+model NewsItem {
+  id          String       @id @default(cuid())
+  providerId  String
+  provider    NewsProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  title       String
+  summary     String?
+  url         String
+  imageUrl    String?
+  publishedAt DateTime
+  fetchedAt   DateTime     @default(now())
+
+  @@unique([providerId, url])
+  @@index([publishedAt])
 }
 
 model MerchantVenue {

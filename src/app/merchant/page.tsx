@@ -10,6 +10,15 @@ type Venue = {
   location: string | null;
   analyticsToken: string;
   webhook: { url: string; enabled: boolean } | null;
+  playConfig?: {
+    playEarnEnabled: boolean;
+    earnRatePer10: number;
+    dailyCardCap: number;
+    multiplier: number;
+    openHour: number | null;
+    closeHour: number | null;
+    publicIp: string | null;
+  };
 };
 
 type Analytics = {
@@ -24,6 +33,110 @@ type Analytics = {
 };
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Merchant lever for game earning: rate, daily cap, boost, hours, Wi-Fi IP. */
+function PlayEarnConfig({
+  venueId,
+  initial,
+}: {
+  venueId: string;
+  initial?: {
+    playEarnEnabled: boolean;
+    earnRatePer10: number;
+    dailyCardCap: number;
+    multiplier: number;
+    openHour: number | null;
+    closeHour: number | null;
+    publicIp: string | null;
+  };
+}) {
+  const [enabled, setEnabled] = useState(initial?.playEarnEnabled ?? true);
+  const [rate, setRate] = useState(String(initial?.earnRatePer10 ?? 1));
+  const [cap, setCap] = useState(String(initial?.dailyCardCap ?? 30));
+  const [multiplier, setMultiplier] = useState(String(initial?.multiplier ?? 1));
+  const [openHour, setOpenHour] = useState(initial?.openHour?.toString() ?? '');
+  const [closeHour, setCloseHour] = useState(initial?.closeHour?.toString() ?? '');
+  const [publicIp, setPublicIp] = useState(initial?.publicIp ?? '');
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    if (!initial) return;
+    setEnabled(initial.playEarnEnabled);
+    setRate(String(initial.earnRatePer10));
+    setCap(String(initial.dailyCardCap));
+    setMultiplier(String(initial.multiplier));
+    setOpenHour(initial.openHour?.toString() ?? '');
+    setCloseHour(initial.closeHour?.toString() ?? '');
+    setPublicIp(initial.publicIp ?? '');
+  }, [initial]);
+
+  async function save() {
+    setMsg('');
+    const res = await fetch(`/api/merchant/venues/${venueId}/play-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playEarnEnabled: enabled,
+        earnRatePer10: Number(rate),
+        dailyCardCap: Number(cap),
+        multiplier: Number(multiplier),
+        openHour: openHour === '' ? null : Number(openHour),
+        closeHour: closeHour === '' ? null : Number(closeHour),
+        publicIp: publicIp || null,
+      }),
+    });
+    const d = await res.json();
+    setMsg(res.ok ? 'Saved.' : d.error ?? 'Could not save.');
+  }
+
+  return (
+    <div className="card p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-bold">Game earning at your venue</p>
+        <button
+          onClick={() => setEnabled(!enabled)}
+          className={`rounded-full px-3 py-1 text-xs font-bold ${enabled ? 'bg-perx text-ink-950' : 'bg-white/10 text-ink-400'}`}
+        >
+          {enabled ? 'On' : 'Off'}
+        </button>
+      </div>
+      <p className="mb-3 text-xs text-ink-500">
+        Card points from games stay pending until the customer makes a purchase the same day — a
+        photographed table QR earns nothing. Your daily cap keeps the cost predictable.
+      </p>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <label className="text-xs text-ink-400">
+          Card pts per 10 game pts
+          <input className="input mt-1 h-10" inputMode="numeric" value={rate} onChange={(e) => setRate(e.target.value.replace(/\D/g, ''))} />
+        </label>
+        <label className="text-xs text-ink-400">
+          Daily cap per customer
+          <input className="input mt-1 h-10" inputMode="numeric" value={cap} onChange={(e) => setCap(e.target.value.replace(/\D/g, ''))} />
+        </label>
+        <label className="text-xs text-ink-400">
+          Boost multiplier (1 = none)
+          <input className="input mt-1 h-10" inputMode="decimal" value={multiplier} onChange={(e) => setMultiplier(e.target.value.replace(/[^0-9.]/g, ''))} />
+        </label>
+        <label className="text-xs text-ink-400">
+          Venue Wi-Fi public IP
+          <input className="input mt-1 h-10" placeholder="optional" value={publicIp} onChange={(e) => setPublicIp(e.target.value)} />
+        </label>
+        <label className="text-xs text-ink-400">
+          Opens (hour 0–23)
+          <input className="input mt-1 h-10" inputMode="numeric" placeholder="e.g. 8" value={openHour} onChange={(e) => setOpenHour(e.target.value.replace(/\D/g, ''))} />
+        </label>
+        <label className="text-xs text-ink-400">
+          Closes (hour 0–23)
+          <input className="input mt-1 h-10" inputMode="numeric" placeholder="e.g. 23" value={closeHour} onChange={(e) => setCloseHour(e.target.value.replace(/\D/g, ''))} />
+        </label>
+      </div>
+      {msg && <p className="mt-2 text-xs text-perx-light">{msg}</p>}
+      <button onClick={save} className="btn-primary mt-3 h-10 text-sm">
+        Save earning rules
+      </button>
+    </div>
+  );
+}
 
 export default function MerchantPage() {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -168,6 +281,8 @@ export default function MerchantPage() {
               Points earned here: <span className="font-display font-black text-perx-light">{data.pointsEarned}</span>
             </p>
           </div>
+
+          <PlayEarnConfig venueId={venueId} initial={venue?.playConfig} />
 
           <div className="card p-4">
             <p className="mb-2 text-sm font-bold">Perx platform integration</p>

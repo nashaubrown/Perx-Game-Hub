@@ -23,6 +23,9 @@ export default function AdminPage() {
   return (
     <main className="safe-bottom px-4 animate-fade-up">
       <TopBar back="/profile" title="Add a book" />
+      <a href="/admin/news" className="btn-ghost mb-2 mt-2 h-11 text-sm">
+        Manage news providers →
+      </a>
       <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
         <input name="title" className="input" placeholder="Title" required />
         <input name="author" className="input" placeholder="Author" required />

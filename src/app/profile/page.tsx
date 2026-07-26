@@ -68,6 +68,18 @@ export default function ProfilePage() {
         ))}
       </div>
 
+      {(me.pendingCardPoints?.length ?? 0) > 0 && (
+        <div className="card mt-5 border-warning/50 p-4">
+          <p className="mb-1 text-sm font-bold text-warning">Pending merchant points</p>
+          {me.pendingCardPoints!.map((p) => (
+            <p key={p.venueId} className="text-sm text-ink-400">
+              <span className="font-bold text-white">{p.cardPoints} pts</span> at {p.venue} — any purchase
+              there today unlocks them.
+            </p>
+          ))}
+        </div>
+      )}
+
       {(me.role === 'MERCHANT' || me.role === 'ADMIN') && (
         <div className="mt-5 flex flex-col gap-2">
           {me.role === 'ADMIN' && (

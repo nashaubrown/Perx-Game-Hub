@@ -1,6 +1,7 @@
 import { db } from '../../src/lib/db';
 import { award, POINTS } from '../../src/lib/points';
 import { emitVenueEvent } from '../../src/lib/webhooks';
+import { createEarnEvent } from '../../src/lib/integration';
 import type { LobbyRoom, RoomPlayer } from '../realtime/room';
 
 export type FinalStanding = {
@@ -111,7 +112,7 @@ export abstract class Engine {
           won: s.won,
         },
       });
-      await award({
+      const playedRow = await award({
         userId: player.userId,
         guestId: player.guestId,
         amount: POINTS.GAME_PLAYED,
@@ -130,6 +131,21 @@ export abstract class Engine {
           refId: this.sessionId,
           venueId: this.room.venueId,
         });
+      }
+      // venue-tagged play by a registered user → merchant-card earn event
+      // (PENDING until a same-day purchase, unless venue Wi-Fi proved presence)
+      if (this.room.venueId && player.userId && playedRow) {
+        try {
+          await createEarnEvent({
+            userId: player.userId,
+            venueId: this.room.venueId,
+            playPoints: POINTS.GAME_PLAYED + (s.won ? POINTS.GAME_WON : 0),
+            ledgerRowId: playedRow.id,
+            presentByIp: !!player.presentByIp,
+          });
+        } catch (err) {
+          console.error('[earn-event]', err); // integration must never break a game
+        }
       }
     }
 

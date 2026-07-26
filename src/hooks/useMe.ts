@@ -12,6 +12,8 @@ export type Me = {
   winRate: number;
   booksRead: number;
   dailyStreak: number;
+  perxLinked?: boolean;
+  pendingCardPoints?: { venueId: string; venue: string; cardPoints: number }[];
 };
 
 export function useMe() {

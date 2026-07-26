@@ -13,6 +13,9 @@ export type RoomPlayer = PlayerIdentity & {
   lobbyPlayerId: string;
   connected: boolean;
   sockets: Set<string>;
+  // true when the player's connection came from the venue's registered Wi-Fi
+  // IP — fast-tracks merchant-card point confirmation (presence proof)
+  presentByIp?: boolean;
 };
 
 /**
@@ -29,6 +32,7 @@ export class LobbyRoom {
   maxPlayers = 8;
   hostUserId: string;
   venueId: string | null;
+  venuePublicIp: string | null = null;
   status: 'OPEN' | 'IN_GAME' | 'FINISHED' | 'CLOSED' = 'OPEN';
   players = new Map<string, RoomPlayer>();
   engine: Engine | null = null;
@@ -91,12 +95,17 @@ export async function getRoom(io: Server, code: string): Promise<LobbyRoom | nul
 
   const lobby = await db.lobby.findUnique({
     where: { code },
-    include: { players: true, game: { select: { maxPlayers: true } } },
+    include: {
+      players: true,
+      game: { select: { maxPlayers: true } },
+      venue: { select: { publicIp: true } },
+    },
   });
   if (!lobby || lobby.status === 'CLOSED') return null;
 
   const room = new LobbyRoom(io, lobby);
   room.maxPlayers = lobby.game.maxPlayers;
+  room.venuePublicIp = lobby.venue?.publicIp ?? null;
   // Rehydrate roster after a server restart — everyone shows disconnected
   // until they rejoin with the same code.
   for (const p of lobby.players) {
