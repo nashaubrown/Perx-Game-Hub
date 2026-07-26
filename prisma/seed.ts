@@ -116,7 +116,15 @@ async function main() {
     { name: 'Raajje.mv', slug: 'raajje', feedUrl: 'https://raajje.mv/rss', language: 'en', featured: false },
   ];
   for (const p of newsProviders) {
-    await db.newsProvider.upsert({ where: { slug: p.slug }, create: p, update: {} });
+    const existing = await db.newsProvider.findUnique({ where: { slug: p.slug } });
+    if (!existing) {
+      await db.newsProvider.create({ data: { ...p, apiToken: crypto.randomBytes(24).toString('hex') } });
+    } else if (!existing.apiToken) {
+      await db.newsProvider.update({
+        where: { slug: p.slug },
+        data: { apiToken: crypto.randomBytes(24).toString('hex') },
+      });
+    }
   }
   const mihaaru = await db.newsProvider.findUnique({ where: { slug: 'mihaaru' } });
   const sun = await db.newsProvider.findUnique({ where: { slug: 'sun-online' } });

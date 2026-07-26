@@ -27,6 +27,7 @@ export default function NewsPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [briefBonus, setBriefBonus] = useState(0);
 
   useEffect(() => {
     fetch('/api/news')
@@ -36,6 +37,16 @@ export default function NewsPage() {
         setItems(d.items ?? []);
       })
       .finally(() => setLoading(false));
+    // first news visit of the day → small habit bonus
+    fetch('/api/news/checkin', { method: 'POST' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.awarded > 0) {
+          setBriefBonus(d.awarded);
+          setTimeout(() => setBriefBonus(0), 3000);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const shown = useMemo(
@@ -49,6 +60,11 @@ export default function NewsPage() {
     <main className="safe-bottom px-4 animate-fade-up">
       <TopBar title="Daily news" />
       <p className="text-sm text-ink-400">Headlines from the Maldives while your order's on the way.</p>
+      {briefBonus > 0 && (
+        <p className="mt-2 w-fit rounded-full bg-perx px-3 py-1 text-sm font-bold text-ink-950 animate-pop">
+          +{briefBonus} pts — daily brief ☕
+        </p>
+      )}
 
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
         <button

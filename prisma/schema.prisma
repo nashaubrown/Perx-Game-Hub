@@ -142,15 +142,17 @@ model PlayEarnEvent {
 
 // ---- Daily News: featured slots are the sellable unit for news providers ----
 model NewsProvider {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  logoUrl   String?
-  feedUrl   String? // RSS/Atom feed to pull from
-  language  String   @default("en") // en | dv (Dhivehi/Thaana is RTL)
-  featured  Boolean  @default(false) // paid placement: pinned to the top with a Featured chip
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  logoUrl       String?
+  feedUrl       String? // optional RSS/Atom fallback
+  apiToken      String?   @unique // bearer token for the provider push API (/api/v1/news/items)
+  language      String    @default("en") // en | dv (Dhivehi/Thaana is RTL)
+  featured      Boolean   @default(false) // paid placement: pinned to the top with a Featured chip
+  featuredUntil DateTime? // placement end date — featured expires automatically
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
 
   items NewsItem[]
 }

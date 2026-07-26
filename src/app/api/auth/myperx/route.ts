@@ -38,8 +38,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (!user) {
-    // provision a Play profile for this MyPerx account
-    let handle = String(claims.handle ?? '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+    // provision a Play profile for this MyPerx account.
+    // MyPerx handles look like "nashau@perx" — the part before @ is the handle.
+    const rawHandle = String(claims.handle ?? '').split('@')[0];
+    let handle = rawHandle.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
     if (!HANDLE_RE.test(handle)) handle = `perx_${claims.sub.replace(/[^a-z0-9]/gi, '').slice(0, 10).toLowerCase()}`;
     let final = handle;
     let n = 2;

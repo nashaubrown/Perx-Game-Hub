@@ -81,6 +81,21 @@ Lists earn events with statuses `PENDING | CONFIRMED | SENT | EXPIRED | FAILED` 
 
 Per venue: earning on/off · card points per 10 game points (default 1) · daily cap per customer (default 30) · boost multiplier (0.5–5×) · opening hours · venue Wi-Fi public IP (presence fast-track). Admins additionally map the venue to its `externalMerchantId`.
 
+## News provider push API
+
+For Maldivian news outlets featured in the Daily News tab. Each provider gets a bearer token (admin panel → News providers → tap the token row). Their CMS pushes headlines on publish:
+
+```
+POST {PLAY_URL}/api/v1/news/items
+Authorization: Bearer <provider apiToken>
+
+{ "title": "...", "url": "https://...", "summary"?: "...", "imageUrl"?: "https://...", "publishedAt"?: "ISO" }
+```
+
+Batch form: `{ "items": [ ...up to 20... ] }`. Idempotent on (provider, url) — re-pushing updates the title/summary. RSS remains available as a fallback (`feedUrl`, polled hourly). Dhivehi providers are rendered RTL automatically (`language: "dv"`).
+
+SSO handle note: MyPerx handles arrive as `name@perx` in the `handle` claim; Play uses the part before `@` as the display handle.
+
 ## Fraud posture (why a photographed table QR is worthless)
 
 1. **Pending-until-purchase** — no same-day transaction at the merchant → no card points, ever.

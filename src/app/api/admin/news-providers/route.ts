@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { refreshFeeds } from '@/lib/news';
@@ -20,11 +21,19 @@ export async function POST(req: NextRequest) {
 
   // toggle featured / active on an existing provider
   if (body?.providerId) {
+    // featuredDays sets the placement window (sold per week/month); 0/undefined = open-ended
+    const featuredUntil =
+      body.featured && Number(body.featuredDays) > 0
+        ? new Date(Date.now() + Number(body.featuredDays) * 24 * 60 * 60 * 1000)
+        : body.featured
+          ? null
+          : undefined;
     const provider = await db.newsProvider.update({
       where: { id: String(body.providerId) },
       data: {
-        ...(body.featured !== undefined ? { featured: !!body.featured } : {}),
+        ...(body.featured !== undefined ? { featured: !!body.featured, featuredUntil } : {}),
         ...(body.active !== undefined ? { active: !!body.active } : {}),
+        ...(body.rotateToken ? { apiToken: crypto.randomBytes(24).toString('hex') } : {}),
       },
     });
     return NextResponse.json({ ok: true, provider });
@@ -44,6 +53,7 @@ export async function POST(req: NextRequest) {
       feedUrl,
       language: body?.language === 'dv' ? 'dv' : 'en',
       featured: !!body?.featured,
+      apiToken: crypto.randomBytes(24).toString('hex'), // hand this to the outlet for the push API
     },
   });
   const results = feedUrl ? await refreshFeeds() : [];
