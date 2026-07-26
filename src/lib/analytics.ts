@@ -7,6 +7,7 @@ import { db } from './db';
  */
 export async function venueAnalytics(venueId: string, days = 30) {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const prevSince = new Date(since.getTime() - days * 24 * 60 * 60 * 1000);
 
   const sessions = await db.gameSession.findMany({
     where: { venueId, startedAt: { gte: since } },
@@ -75,6 +76,23 @@ export async function venueAnalytics(venueId: string, days = 30) {
     rewardRedeemTaps: interactionRows.find((r) => r.type === 'redeem_tap')?._count ?? 0,
   };
 
+  // previous window of the same length — powers "up/down vs last period"
+  const [prevGames, prevLobbies, prevPointsAgg, prevResults] = await Promise.all([
+    db.gameSession.count({ where: { venueId, startedAt: { gte: prevSince, lt: since } } }),
+    db.lobby.count({ where: { venueId, createdAt: { gte: prevSince, lt: since } } }),
+    db.pointsLedger.aggregate({
+      where: { venueId, createdAt: { gte: prevSince, lt: since }, amount: { gt: 0 } },
+      _sum: { amount: true },
+    }),
+    db.gameResult.findMany({
+      where: { session: { venueId, startedAt: { gte: prevSince, lt: since } } },
+      select: { userId: true, guestId: true },
+    }),
+  ]);
+  const prevUnique = new Set(
+    prevResults.map((r) => (r.userId ? `user:${r.userId}` : r.guestId ? `guest:${r.guestId}` : '')).filter(Boolean)
+  ).size;
+
   return {
     venueId,
     windowDays: days,
@@ -87,5 +105,104 @@ export async function venueAnalytics(venueId: string, days = 30) {
     peakHours,
     pointsEarned: pointsAgg._sum.amount ?? 0,
     interactions,
+    previous: {
+      gamesPlayed: prevGames,
+      lobbiesHosted: prevLobbies,
+      uniquePlayers: prevUnique,
+      pointsEarned: prevPointsAgg._sum.amount ?? 0,
+    },
   };
+}
+
+export type ChurnSignal = 'active' | 'cooling' | 'at_risk';
+
+/**
+ * Per-customer play profiles for one venue — only customers who actually
+ * played venue-tagged games or redeemed there (never app-wide behavior).
+ * Keyed by perxUserId where linked so the Perx Merchant portal can join them
+ * to its own customer records and feed its churn model.
+ */
+export async function venueCustomers(venueId: string, days = 90) {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const results = await db.gameResult.findMany({
+    where: { session: { venueId, startedAt: { gte: since } }, userId: { not: null } },
+    include: {
+      user: { select: { id: true, handle: true, perxUserId: true } },
+      session: { select: { startedAt: true, _count: { select: { results: true } } } },
+    },
+  });
+
+  type Row = {
+    userId: string;
+    handle: string;
+    perxUserId: string | null;
+    gamesPlayed: number;
+    wins: number;
+    lastPlayedAt: Date;
+    firstPlayedAt: Date;
+    groupSizes: number[];
+  };
+  const byUser = new Map<string, Row>();
+  for (const r of results) {
+    if (!r.user) continue;
+    const row = byUser.get(r.user.id) ?? {
+      userId: r.user.id,
+      handle: r.user.handle,
+      perxUserId: r.user.perxUserId,
+      gamesPlayed: 0,
+      wins: 0,
+      lastPlayedAt: r.session.startedAt,
+      firstPlayedAt: r.session.startedAt,
+      groupSizes: [],
+    };
+    row.gamesPlayed++;
+    if (r.won) row.wins++;
+    if (r.session.startedAt > row.lastPlayedAt) row.lastPlayedAt = r.session.startedAt;
+    if (r.session.startedAt < row.firstPlayedAt) row.firstPlayedAt = r.session.startedAt;
+    row.groupSizes.push(r.session._count.results);
+    byUser.set(r.user.id, row);
+  }
+
+  const userIds = [...byUser.keys()];
+  const [redemptions, invites] = await Promise.all([
+    db.redemption.groupBy({
+      by: ['userId'],
+      where: { userId: { in: userIds }, reward: { venueId }, status: 'VALIDATED' },
+      _count: true,
+    }),
+    db.interactionEvent.groupBy({
+      by: ['userId'],
+      where: { userId: { in: userIds }, venueId, type: 'share_invite', createdAt: { gte: since } },
+      _count: true,
+    }),
+  ]);
+  const redemptionsByUser = Object.fromEntries(redemptions.map((r) => [r.userId, r._count]));
+  const invitesByUser = Object.fromEntries(invites.map((r) => [r.userId!, r._count]));
+
+  const now = Date.now();
+  return [...byUser.values()]
+    .map((row) => {
+      const daysSinceLastPlay = Math.floor((now - row.lastPlayedAt.getTime()) / (24 * 60 * 60 * 1000));
+      const activeWeeks = Math.max(1, (now - row.firstPlayedAt.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      const playsPerWeek = Math.round((row.gamesPlayed / activeWeeks) * 10) / 10;
+      // simple recency signal the portal's churn model can consume or override
+      const churnSignal: ChurnSignal =
+        daysSinceLastPlay <= 7 ? 'active' : daysSinceLastPlay <= 21 ? 'cooling' : 'at_risk';
+      return {
+        perxUserId: row.perxUserId, // null until the customer links MyPerx
+        handle: `@${row.handle}`,
+        gamesPlayed: row.gamesPlayed,
+        wins: row.wins,
+        lastPlayedAt: row.lastPlayedAt,
+        daysSinceLastPlay,
+        playsPerWeek,
+        avgGroupSize:
+          Math.round((row.groupSizes.reduce((s, n) => s + n, 0) / Math.max(1, row.groupSizes.length)) * 10) / 10,
+        redemptions: redemptionsByUser[row.userId] ?? 0,
+        invitesSent: invitesByUser[row.userId] ?? 0,
+        churnSignal,
+      };
+    })
+    .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
 }

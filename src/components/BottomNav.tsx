@@ -13,7 +13,7 @@ const TABS = [
 ];
 
 // hidden during gameplay + reading so the whole screen belongs to the game/book
-const HIDDEN_PREFIXES = ['/lobby/', '/read/', '/login', '/signup', '/forgot', '/reset'];
+const HIDDEN_PREFIXES = ['/lobby/', '/read/', '/login', '/signup', '/forgot', '/reset', '/embed/'];
 
 export function BottomNav() {
   const pathname = usePathname();

@@ -81,6 +81,32 @@ Lists earn events with statuses `PENDING | CONFIRMED | SENT | EXPIRED | FAILED` 
 
 Per venue: earning on/off · card points per 10 game points (default 1) · daily cap per customer (default 30) · boost multiplier (0.5–5×) · opening hours · venue Wi-Fi public IP (presence fast-track). Admins additionally map the venue to its `externalMerchantId`.
 
+## Merchant portal: interaction insights
+
+Three ways to surface Play activity in the Perx Merchant portal (all live on Play's side):
+
+**Pull — analytics + interactions** (existing endpoint, extended):
+`GET /api/v1/venues/:id/analytics?days=30` now also returns `interactions` (invites shared from the venue's tables, guest signup prompts, reward redeem taps, unique actors, by-type map) and `previous` (same metrics for the prior window, for "up/down vs last period" displays).
+
+**Pull — per-customer play profiles** (feeds the churn model):
+```
+GET /api/v1/venues/:id/customers?days=90&linkedOnly=1
+Authorization: Bearer <venue analyticsToken>
+```
+Rows: `{ perxUserId, handle, gamesPlayed, wins, lastPlayedAt, daysSinceLastPlay, playsPerWeek, avgGroupSize, redemptions, invitesSent, churnSignal }` where `churnSignal` is a simple recency bucket (`active` ≤7d, `cooling` ≤21d, `at_risk` >21d) the portal's own model can consume or override. Only customers who played venue-tagged games at THIS venue are included — never app-wide behavior. `perxUserId` is the join key to the portal's customer records; it's null until the customer links MyPerx (filter with `linkedOnly=1`). Recommended: nightly pull into the churn pipeline.
+
+**Push — daily digest webhook**: sent to the venue's configured webhook URL every venue-local morning (from 06:00 MV, retried hourly on failure), HMAC-signed with the venue's webhook secret:
+```
+X-Perx-Event: daily_digest
+{ "event": "daily_digest", "venueId", "merchantId", "day": "YYYY-MM-DD",
+  "stats":            { gamesFinished, uniquePlayers, guestPlayers, redemptionsValidated, pointsEarned, invitesShared, signupPromptsShown },
+  "sameDayLastWeek":  { ...same shape... },
+  "at": "ISO" }
+```
+`sameDayLastWeek` enables "vs last Tuesday" comparisons without the portal storing history.
+
+**Embed (stopgap until native portal UI)**: iframe `https://<play-host>/embed/venue/:id?token=<analyticsToken>` — chromeless page with stat tiles + deltas, busiest-slot callout, and the per-customer table with churn badges.
+
 ## News provider push API
 
 For Maldivian news outlets featured in the Daily News tab. Each provider gets a bearer token (admin panel → News providers → tap the token row). Their CMS pushes headlines on publish:

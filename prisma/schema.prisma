@@ -385,10 +385,11 @@ model Redemption {
 }
 
 model WebhookConfig {
-  id      String  @id @default(cuid())
-  venueId String  @unique
-  venue   Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  url     String
-  secret  String
-  enabled Boolean @default(true)
+  id            String  @id @default(cuid())
+  venueId       String  @unique
+  venue         Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  url           String
+  secret        String
+  enabled       Boolean @default(true)
+  lastDigestDay String? // venue-local day of the last daily digest sent (idempotency)
 }

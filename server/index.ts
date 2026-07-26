@@ -44,6 +44,7 @@ async function main() {
   if (!process.env.DISABLE_JOBS) {
     const { expireStalePending, dispatchConfirmed } = await import('../src/lib/integration');
     const { refreshFeeds } = await import('../src/lib/news');
+    const { sendDailyDigests } = await import('../src/lib/digest');
     setInterval(async () => {
       try {
         await expireStalePending();
@@ -52,6 +53,20 @@ async function main() {
         console.error('[jobs:integration]', err);
       }
     }, 60000);
+    // daily digest to venue webhooks — from 06:00 Maldives time; the hourly
+    // check retries later in the day if a webhook was down
+    setInterval(async () => {
+      try {
+        const hourMV = new Date(Date.now() + 5 * 60 * 60 * 1000).getUTCHours();
+        if (hourMV >= 6) {
+          const outcomes = await sendDailyDigests();
+          const sent = outcomes.filter((o) => o.ok);
+          if (sent.length) console.log('[jobs:digest]', sent.map((o) => o.venue).join(', '));
+        }
+      } catch (err) {
+        console.error('[jobs:digest]', err);
+      }
+    }, 60 * 60 * 1000);
     const news = async () => {
       try {
         const results = await refreshFeeds();
