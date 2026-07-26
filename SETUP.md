@@ -118,6 +118,23 @@ All demo accounts use password **`perxplay`**.
 
 ---
 
+## Updating to the latest code
+
+After a `git pull`, always run the full sequence — skipping steps causes stale-cache errors
+("Unknown argument" from the database, or a webpack "reading 'call'" error in the browser):
+
+```powershell
+git pull
+npm install
+npx prisma migrate deploy
+npx prisma generate
+npm run db:seed
+Remove-Item -Recurse -Force .next   # (mac/linux: rm -rf .next)
+npm run dev
+```
+
+Then hard-refresh the browser (Ctrl+Shift+R).
+
 ## Fixing common problems
 
 | Symptom | Fix |
