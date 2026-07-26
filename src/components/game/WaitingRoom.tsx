@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/Avatar';
+import { track } from '@/lib/track';
 import type { useLobby } from '@/hooks/useLobby';
 
 type LobbyInfo = {
@@ -29,6 +30,7 @@ export function WaitingRoom({ lobby }: { lobby: ReturnType<typeof useLobby> }) {
   const enough = info ? state.players.length >= info.game.minPlayers : state.players.length >= 2;
 
   async function share() {
+    track('share_invite', { game: info?.game.name });
     const url = info?.joinUrl ?? location.href;
     if (navigator.share) {
       navigator.share({ title: 'Join my Perx Play game', text: `Code: ${state.code}`, url }).catch(() => {});

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { TopBar } from '@/components/TopBar';
+import { track } from '@/lib/track';
 
 type Provider = { id: string; name: string; slug: string; logoUrl: string | null; language: string; featured: boolean };
 type Item = {
@@ -116,6 +117,7 @@ function NewsCard({ item, featured }: { item: Item; featured?: boolean }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => track('news_click', { provider: item.provider.name, featured: !!featured })}
       className={`card block p-4 active:bg-white/10 ${featured ? 'border-perx/50' : ''}`}
     >
       <div className="mb-1.5 flex items-center gap-2 text-xs text-ink-500">

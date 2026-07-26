@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { TopBar } from '@/components/TopBar';
+import { track } from '@/lib/track';
 
 type Book = {
   id: string;
@@ -71,7 +72,7 @@ export default function BooksPage() {
       ) : (
         <div className="mt-4 grid grid-cols-3 gap-x-3 gap-y-5">
           {shown.map((b) => (
-            <Link key={b.id} href={`/read/${b.id}`}>
+            <Link key={b.id} href={`/read/${b.id}`} onClick={() => track('book_open', { title: b.title, genre: b.genre })}>
               <Cover book={b} />
               <p className="mt-1.5 line-clamp-2 text-xs font-bold leading-tight">{b.title}</p>
               <p className="line-clamp-1 text-[11px] text-ink-500">{b.author}</p>

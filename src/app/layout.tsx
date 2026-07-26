@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { BottomNav } from '@/components/BottomNav';
 import { RegisterSW } from '@/components/RegisterSW';
+import { Tracker } from '@/components/Tracker';
 
 export const metadata: Metadata = {
   title: 'Perx Play',
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="mx-auto min-h-dvh w-full max-w-md">{children}</div>
         <BottomNav />
         <RegisterSW />
+        <Tracker />
       </body>
     </html>
   );

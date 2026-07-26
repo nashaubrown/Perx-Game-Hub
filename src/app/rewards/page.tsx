@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { TopBar } from '@/components/TopBar';
 import { Countdown } from '@/components/game/Countdown';
+import { track } from '@/lib/track';
 
 type Reward = { id: string; name: string; description: string | null; costPoints: number };
 type VenueRewards = { id: string; name: string; location: string | null; rewards: Reward[] };
@@ -27,6 +28,7 @@ export default function RewardsPage() {
 
   async function redeem(reward: Reward) {
     setError('');
+    track('redeem_tap', { reward: reward.name, cost: reward.costPoints });
     const res = await fetch(`/api/rewards/${reward.id}/redeem`, { method: 'POST' });
     const data = await res.json();
     if (!res.ok) return setError(data.error ?? 'Could not redeem.');

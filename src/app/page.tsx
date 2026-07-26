@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useMe } from '@/hooks/useMe';
+import { track } from '@/lib/track';
 
 type Game = { id: string; name: string; tagline: string; multi: boolean };
 
@@ -50,10 +51,10 @@ export default function HomePage() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <Link href="/host" className="btn-primary text-base">
+        <Link href="/host" className="btn-primary text-base" onClick={() => track('game_host_tap')}>
           Host a game
         </Link>
-        <Link href="/join" className="btn-ghost text-base">
+        <Link href="/join" className="btn-ghost text-base" onClick={() => track('game_join_tap')}>
           Join with a code
         </Link>
       </div>

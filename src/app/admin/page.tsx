@@ -23,6 +23,9 @@ export default function AdminPage() {
   return (
     <main className="safe-bottom px-4 animate-fade-up">
       <TopBar back="/profile" title="Add a book" />
+      <a href="/admin/insights" className="btn-ghost mt-2 h-11 text-sm">
+        Interaction insights →
+      </a>
       <a href="/admin/news" className="btn-ghost mb-2 mt-2 h-11 text-sm">
         Manage news providers →
       </a>

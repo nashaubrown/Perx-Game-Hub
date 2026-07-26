@@ -157,6 +157,25 @@ model NewsProvider {
   items NewsItem[]
 }
 
+// ---- Interaction engine: append-only user-behavior events ----------------
+// Captures what people DO in the UI (views, taps, clicks). Combined with the
+// gameplay tables (sessions, results, ledger) it powers /admin/insights.
+model InteractionEvent {
+  id        String   @id @default(cuid())
+  actorKey  String // "user:<id>" for logged-in, "sid:<anon id>" otherwise
+  userId    String?
+  sid       String?
+  type      String // whitelisted in /api/track
+  path      String?
+  venueId   String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([actorKey, createdAt])
+}
+
 model NewsItem {
   id          String       @id @default(cuid())
   providerId  String

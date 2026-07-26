@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { Avatar } from '@/components/Avatar';
+import { track } from '@/lib/track';
 import type { useLobby } from '@/hooks/useLobby';
 
 export type FinalPayload = {
@@ -28,6 +30,11 @@ export function FinalView({
   const me = payload.standings.find((s) => s.key === lobby.you);
   const isHost = lobby.you === lobby.state?.hostKey;
   const myWords = payload.breakdown && lobby.you ? payload.breakdown[lobby.you] : undefined;
+
+  // measure how often guests see the keep-your-points prompt (conversion funnel)
+  useEffect(() => {
+    if (isGuest) track('signup_prompt_shown', { game: lobby.state?.gameId });
+  }, [isGuest, lobby.state?.gameId]);
 
   return (
     <div className="flex flex-col gap-5 pt-8 animate-fade-up">
