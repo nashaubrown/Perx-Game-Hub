@@ -67,6 +67,7 @@ export class LobbyRoom {
       code: this.code,
       gameId: this.gameId,
       status: this.status,
+      venueId: this.venueId,
       hostKey: `user:${this.hostUserId}`,
       players: [...this.players.values()].map((p) => ({
         key: p.key,

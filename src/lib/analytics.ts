@@ -55,6 +55,26 @@ export async function venueAnalytics(venueId: string, days = 30) {
     _sum: { amount: true },
   });
 
+  // venue-scoped interaction events (shares from this venue's lobbies,
+  // signup prompts after games here, taps on this venue's rewards)
+  const interactionRows = await db.interactionEvent.groupBy({
+    by: ['type'],
+    where: { venueId, createdAt: { gte: since } },
+    _count: true,
+  });
+  const interactionActors = await db.interactionEvent.findMany({
+    where: { venueId, createdAt: { gte: since } },
+    distinct: ['actorKey'],
+    select: { id: true },
+  });
+  const interactions = {
+    byType: Object.fromEntries(interactionRows.map((r) => [r.type, r._count])),
+    uniqueActors: interactionActors.length,
+    invitesShared: interactionRows.find((r) => r.type === 'share_invite')?._count ?? 0,
+    guestSignupPrompts: interactionRows.find((r) => r.type === 'signup_prompt_shown')?._count ?? 0,
+    rewardRedeemTaps: interactionRows.find((r) => r.type === 'redeem_tap')?._count ?? 0,
+  };
+
   return {
     venueId,
     windowDays: days,
@@ -66,5 +86,6 @@ export async function venueAnalytics(venueId: string, days = 30) {
     sessionsPerDay: perDay,
     peakHours,
     pointsEarned: pointsAgg._sum.amount ?? 0,
+    interactions,
   };
 }

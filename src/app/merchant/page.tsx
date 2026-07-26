@@ -30,6 +30,12 @@ type Analytics = {
   sessionsPerDay: Record<string, number>;
   peakHours: number[][];
   pointsEarned: number;
+  interactions?: {
+    uniqueActors: number;
+    invitesShared: number;
+    guestSignupPrompts: number;
+    rewardRedeemTaps: number;
+  };
 };
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -281,6 +287,26 @@ export default function MerchantPage() {
               Points earned here: <span className="font-display font-black text-perx-light">{data.pointsEarned}</span>
             </p>
           </div>
+
+          {data.interactions && (
+            <div className="card p-4">
+              <p className="mb-2 text-sm font-bold">Customer interactions <span className="font-normal text-ink-500">· 30d</span></p>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="font-display text-2xl font-black text-perx-light">{data.interactions.invitesShared}</p>
+                  <p className="text-[11px] text-ink-500">Invites shared from your tables</p>
+                </div>
+                <div>
+                  <p className="font-display text-2xl font-black text-perx-light">{data.interactions.guestSignupPrompts}</p>
+                  <p className="text-[11px] text-ink-500">New-guest signup prompts</p>
+                </div>
+                <div>
+                  <p className="font-display text-2xl font-black text-perx-light">{data.interactions.rewardRedeemTaps}</p>
+                  <p className="text-[11px] text-ink-500">Taps on your rewards</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <PlayEarnConfig venueId={venueId} initial={venue?.playConfig} />
 

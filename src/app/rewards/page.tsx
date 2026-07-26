@@ -26,9 +26,9 @@ export default function RewardsPage() {
       .catch(() => {});
   }, []);
 
-  async function redeem(reward: Reward) {
+  async function redeem(reward: Reward, venueId?: string) {
     setError('');
-    track('redeem_tap', { reward: reward.name, cost: reward.costPoints });
+    track('redeem_tap', { reward: reward.name, cost: reward.costPoints }, venueId);
     const res = await fetch(`/api/rewards/${reward.id}/redeem`, { method: 'POST' });
     const data = await res.json();
     if (!res.ok) return setError(data.error ?? 'Could not redeem.');
@@ -80,7 +80,7 @@ export default function RewardsPage() {
                   {r.description && <p className="text-sm text-ink-400">{r.description}</p>}
                 </div>
                 <button
-                  onClick={() => redeem(r)}
+                  onClick={() => redeem(r, v.id)}
                   disabled={balance === null || balance < r.costPoints}
                   className="rounded-full bg-perx px-4 py-2 text-sm font-bold text-ink-950 disabled:bg-white/10 disabled:text-ink-500"
                 >

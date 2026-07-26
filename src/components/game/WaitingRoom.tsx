@@ -30,7 +30,7 @@ export function WaitingRoom({ lobby }: { lobby: ReturnType<typeof useLobby> }) {
   const enough = info ? state.players.length >= info.game.minPlayers : state.players.length >= 2;
 
   async function share() {
-    track('share_invite', { game: info?.game.name });
+    track('share_invite', { game: info?.game.name }, state.venueId ?? undefined);
     const url = info?.joinUrl ?? location.href;
     if (navigator.share) {
       navigator.share({ title: 'Join my Perx Play game', text: `Code: ${state.code}`, url }).catch(() => {});

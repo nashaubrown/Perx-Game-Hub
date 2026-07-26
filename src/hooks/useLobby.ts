@@ -7,6 +7,7 @@ export type LobbyState = {
   code: string;
   gameId: string;
   status: 'OPEN' | 'IN_GAME' | 'FINISHED' | 'CLOSED';
+  venueId: string | null;
   hostKey: string;
   players: { key: string; nickname: string; connected: boolean; isHost: boolean }[];
 };

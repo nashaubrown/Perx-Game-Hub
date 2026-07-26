@@ -33,8 +33,8 @@ export function FinalView({
 
   // measure how often guests see the keep-your-points prompt (conversion funnel)
   useEffect(() => {
-    if (isGuest) track('signup_prompt_shown', { game: lobby.state?.gameId });
-  }, [isGuest, lobby.state?.gameId]);
+    if (isGuest) track('signup_prompt_shown', { game: lobby.state?.gameId }, lobby.state?.venueId ?? undefined);
+  }, [isGuest, lobby.state?.gameId, lobby.state?.venueId]);
 
   return (
     <div className="flex flex-col gap-5 pt-8 animate-fade-up">
