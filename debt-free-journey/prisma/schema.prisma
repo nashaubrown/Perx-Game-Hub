@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Single-user for now; every root entity hangs off Profile so multi-user
+// auth can be added later by scoping queries to a profile id.
+model Profile {
+  id             String    @id @default(cuid())
+  name           String    @default("Me")
+  monthlyIncome  Int // minor units (laari)
+  currency       String    @default("MVR")
+  paydayDay      Int       @default(1) // day of month salary lands
+  onboarded      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  expenses       Expense[]
+  debts          Debt[]
+}
+
+model Expense {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name      String
+  amount    Int // minor units per month
+  createdAt DateTime @default(now())
+}
+
+model Debt {
+  id              String    @id @default(cuid())
+  profileId       String
+  profile         Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name            String
+  category        String // credit_card | personal_loan | islamic_financing | staff_welfare | other
+  principal       Int // original principal, minor units
+  startingBalance Int // balance when the debt was added to the app, minor units
+  ratePercent     Float // e.g. 0.5 means 0.5%
+  ratePeriod      String // per_month | per_year
+  interestMethod  String // reducing_balance | fixed_profit | zero_interest
+  ibraAvailable   Boolean   @default(false) // fixed_profit only: early settlement rebate
+  totalPayable    Int? // fixed_profit only: contract total (principal + fixed profit)
+  minPayment      Int // minor units per month
+  startDate       DateTime?
+  endDate         DateTime?
+  matchPatterns   String    @default("") // newline-separated substrings to match statement descriptions
+  sortOrder       Int       @default(0) // manual priority for the custom strategy
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  payments        Payment[]
+  transactions    Transaction[]
+}
+
+// Payments and balance adjustments. Balances are always derived:
+// startingBalance - sum(payment amounts) + sum(adjustment deltas).
+model Payment {
+  id         String   @id @default(cuid())
+  debtId     String
+  debt       Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  date       DateTime
+  amount     Int // minor units; for kind=adjustment this is the signed delta to the balance
+  kind       String   @default("payment") // payment | adjustment
+  note       String?
+  importId   String?
+  import     StatementImport? @relation(fields: [importId], references: [id], onDelete: SetNull)
+  autoLogged Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model StatementImport {
+  id           String   @id @default(cuid())
+  filename     String
+  statementType String  @default("bank_account") // bank_account | credit_card
+  periodStart  DateTime?
+  periodEnd    DateTime?
+  parseMethod  String // rules | ai
+  parserName   String? // which rule parser matched, e.g. "bml-account-csv"
+  status       String   @default("applied") // applied | undone
+  closingBalance Int? // from the statement, minor units (credit card reconciliation)
+  summary      String   @default("{}") // JSON: counts of what the import changed
+  createdAt    DateTime @default(now())
+  transactions Transaction[]
+  payments     Payment[]
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  importId    String
+  import      StatementImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+  date        DateTime
+  description String
+  amount      Int // minor units, always positive
+  direction   String // debit | credit
+  category    String   @default("Other")
+  fingerprint String   @unique // sha256(date|amount|normalized description)
+  debtId      String? // set when matched to a debt payment
+  debt        Debt?    @relation(fields: [debtId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+}
+
+model CategoryRule {
+  id       String @id @default(cuid())
+  keyword  String // case-insensitive substring of the transaction description
+  category String
+  priority Int    @default(0)
+}
+
+model Milestone {
+  id         String   @id @default(cuid())
+  key        String   @unique // e.g. first_payment, debt_cleared:<id>, principal_25, debt_free
+  label      String
+  achievedAt DateTime @default(now())
+  celebrated Boolean  @default(false)
+}
