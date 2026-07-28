@@ -1,0 +1,106 @@
+/* ============================================================================
+   DESIGN TOKENS — edit this file to restyle the entire app.
+   Every color, radius and font in the UI resolves to one of these variables.
+   See THEME.md for the full guide. Colors are raw RGB triplets so Tailwind
+   can apply opacity (e.g. bg-primary/20).
+   ========================================================================== */
+
+:root,
+[data-theme='ocean'] {
+  /* Surfaces */
+  --color-bg: 245 247 250; /* page background */
+  --color-surface: 255 255 255; /* cards */
+  --color-surface-2: 240 243 247; /* subtle wells, table stripes */
+  --color-border: 226 232 240;
+
+  /* Text */
+  --color-text: 15 23 42;
+  --color-muted: 100 116 139;
+
+  /* Brand */
+  --color-primary: 13 110 253; /* buttons, links, active nav */
+  --color-primary-fg: 255 255 255;
+  --color-accent: 99 102 241; /* secondary highlights, chart accents */
+
+  /* Semantic */
+  --color-success: 16 158 91;
+  --color-warning: 217 119 6;
+  --color-danger: 220 38 38;
+
+  /* Shape & type */
+  --radius: 14px;
+  --radius-sm: 9px;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  /* Charts: series colors, used in payoff projection + insights */
+  --chart-1: 13 110 253;
+  --chart-2: 99 102 241;
+  --chart-3: 16 158 91;
+  --chart-4: 217 119 6;
+  --chart-5: 219 39 119;
+  --chart-6: 8 145 178;
+}
+
+[data-theme='forest'] {
+  --color-bg: 246 248 244;
+  --color-surface: 255 255 255;
+  --color-surface-2: 238 243 235;
+  --color-border: 222 231 218;
+  --color-text: 26 36 26;
+  --color-muted: 106 122 106;
+  --color-primary: 34 122 74;
+  --color-primary-fg: 255 255 255;
+  --color-accent: 141 110 49;
+  --color-success: 34 122 74;
+  --color-warning: 190 110 20;
+  --color-danger: 190 54 44;
+  --chart-1: 34 122 74;
+  --chart-2: 141 110 49;
+  --chart-3: 8 126 164;
+  --chart-4: 190 110 20;
+  --chart-5: 122 62 122;
+  --chart-6: 60 60 60;
+}
+
+[data-theme='sunset'] {
+  --color-bg: 253 247 243;
+  --color-surface: 255 255 255;
+  --color-surface-2: 250 240 233;
+  --color-border: 241 227 217;
+  --color-text: 44 30 26;
+  --color-muted: 146 118 106;
+  --color-primary: 234 88 12;
+  --color-primary-fg: 255 255 255;
+  --color-accent: 190 24 93;
+  --color-success: 22 142 90;
+  --color-warning: 202 100 6;
+  --color-danger: 210 40 40;
+  --chart-1: 234 88 12;
+  --chart-2: 190 24 93;
+  --chart-3: 22 142 90;
+  --chart-4: 130 90 220;
+  --chart-5: 8 126 164;
+  --chart-6: 120 90 60;
+}
+
+[data-theme='midnight'] {
+  --color-bg: 12 16 26;
+  --color-surface: 22 28 42;
+  --color-surface-2: 30 38 56;
+  --color-border: 46 56 78;
+  --color-text: 232 238 248;
+  --color-muted: 138 150 172;
+  --color-primary: 96 165 250;
+  --color-primary-fg: 10 14 24;
+  --color-accent: 167 139 250;
+  --color-success: 52 211 153;
+  --color-warning: 251 191 36;
+  --color-danger: 248 113 113;
+  --chart-1: 96 165 250;
+  --chart-2: 167 139 250;
+  --chart-3: 52 211 153;
+  --chart-4: 251 191 36;
+  --chart-5: 244 114 182;
+  --chart-6: 34 211 238;
+}

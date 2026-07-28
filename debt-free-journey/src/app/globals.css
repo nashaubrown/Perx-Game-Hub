@@ -1,0 +1,45 @@
+@import './theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  @apply bg-bg text-text antialiased;
+}
+
+/* Styled native range input used by the simulator sliders */
+input[type='range'] {
+  @apply h-2 w-full cursor-pointer appearance-none rounded bg-surface2;
+}
+input[type='range']::-webkit-slider-thumb {
+  @apply h-5 w-5 appearance-none rounded-full bg-primary shadow;
+}
+input[type='range']::-moz-range-thumb {
+  @apply h-5 w-5 rounded-full border-0 bg-primary shadow;
+}
+
+/* Confetti celebration */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0.6;
+  }
+}
+.confetti-piece {
+  position: fixed;
+  top: 0;
+  width: 10px;
+  height: 14px;
+  z-index: 100;
+  pointer-events: none;
+  animation: confetti-fall linear forwards;
+}

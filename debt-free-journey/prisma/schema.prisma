@@ -16,6 +16,8 @@ model Profile {
   currency       String    @default("MVR")
   paydayDay      Int       @default(1) // day of month salary lands
   onboarded      Boolean   @default(false)
+  strategy       String    @default("avalanche") // avalanche | snowball | custom
+  debtBudget     Int? // monthly amount committed to debts; null = all free cash flow
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   expenses       Expense[]
