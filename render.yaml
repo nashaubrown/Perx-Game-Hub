@@ -1,16 +1,22 @@
 # Render Blueprint — deploys the whole app (Next.js + Socket.IO + jobs) as one
 # service with a managed Postgres. In Render: New → Blueprint → pick this repo.
+#
+# Defaults to the FREE tiers so the first deploy needs no payment method:
+#  - free web services sleep after ~15 idle minutes (first load takes ~40s)
+#  - the free Postgres expires after 30 days
+# Upgrade both from the Render dashboard when the demo sticks
+# (web: Starter ~$7/mo · db: Basic 256MB ~$6/mo).
 services:
   - type: web
     name: perx-play
     runtime: node
-    plan: starter # free tier works too, but sleeps after 15 min idle (slow first load)
+    plan: free
     buildCommand: npm ci && npx prisma generate && npm run build
     startCommand: npx prisma migrate deploy && npm run db:seed && npm start
     healthCheckPath: /api/games
     envVars:
       - key: NODE_VERSION
-        value: 20.11.0
+        value: "20.11.0"
       - key: DATABASE_URL
         fromDatabase:
           name: perx-play-db
@@ -26,6 +32,6 @@ services:
 
 databases:
   - name: perx-play-db
-    plan: basic-256mb
+    plan: free
     databaseName: perx_play
     user: perx
